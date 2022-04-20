@@ -3,12 +3,15 @@ package jwt.jwtserver.config;
 import jwt.jwtserver.filter.MyFilter1;
 import jwt.jwtserver.filter.MyFilter2;
 import jwt.jwtserver.filter.MyFilter3;
+import jwt.jwtserver.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 import org.springframework.web.filter.CorsFilter;
@@ -19,10 +22,15 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final CorsFilter corsFilter;
 
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Override
      protected void configure(HttpSecurity http) throws Exception {
         http.addFilterBefore(new MyFilter3(), BasicAuthenticationFilter.class);// 굳이 이렇게 필터를 걸 필요가 없다. => FilterConfig에 걸기, FilterConfig에 있는 필터랑 누가 더 빨리 출력될까?
-        // addFilterBefore After 이든 시큐리티 필터체인이 FilterConfig보다 먼저 실행된다.
+        // addFilterBefore, After 이든 시큐리티 필터체인이 FilterConfig보다 먼저 실행된다.
 
         http.addFilterBefore(new MyFilter1(), SecurityContextPersistenceFilter.class);
         // 이렇게 순서도 정할수 있다. SecurityContextPersistenceFilter 이 클래스가 BasicAuthenticationFilter보다 먼저 실행되는 필터이다.
@@ -41,6 +49,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // authorization에 토큰을 넣는 방식이 JWT 방식이다.
                 // Basic => ID와 PW를 가지고 있는 방식
                 // Bearer => Token을 가지고 있는 방식
+                .addFilter(new JwtAuthenticationFilter(authenticationManager())) // 원래 AuthenticationManager를 던져줘야함 -> JwtAuthenticationFilter, .formLogin().disable()로 인해 formLogin이 안되서 그를 해주기 위함
                 .authorizeRequests()
                 .antMatchers("/api/v1/user/**")
                 .access("hasRole('ROLE_USER') or hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")
@@ -49,5 +58,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/v1/admin/**")
                 .access("hasRole('ROLE_ADMIN')")
                 .anyRequest().permitAll();
+//                .and()
+//                .formLogin() => 위에서 .formLogin().disable() 했기 때문에 의미가 없음
+//                .loginProcessingUrl("/login")
     }
 }
