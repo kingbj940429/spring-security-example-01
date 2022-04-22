@@ -1,5 +1,7 @@
 package jwt.jwtserver.filter;
 
+import org.springframework.stereotype.Component;
+
 import javax.servlet.*;
 import java.io.IOException;
 

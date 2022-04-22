@@ -33,4 +33,19 @@ public class RestApiController {
 
         return "회원가입완료";
     }
+
+    @GetMapping("/api/v1/user")
+    public String user() {
+        System.out.println("GET /api/v1/user" );
+        return "user";
+    }
+
+    @GetMapping("/api/v1/manager")
+    public String manager() {
+        return "manager";
+    }
+    @GetMapping("/api/v1/admin")
+    public String admin() {
+        return "admin";
+    }
 }
